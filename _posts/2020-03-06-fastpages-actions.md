@@ -19,7 +19,7 @@ Recently, I've been able to use GitHub Actions to build some very unique tools f
 
 [fastpages](https://github.com/fastai/fastpages) is an automated, open-source blogging platform with enhanced support for Jupyter notebooks.  You save your notebooks, markdown, or Word docs into a directory on GitHub, and they automatically become blog posts. Read the announcement below:
 
-<center>{% twitter https://twitter.com/jeremyphoward/status/1232059428238581760?s=20 %}</center>
+<!-- <center>{% twitter https://twitter.com/jeremyphoward/status/1232059428238581760?s=20 %}</center> -->
 
 ## Machine Learning Ops
 
@@ -92,7 +92,7 @@ The [Usage](https://github.com/pypa/gh-action-pypi-publish#usage) section descri
 
 This Action expects two inputs: `user` and a `password`.  You will notice that the password is referencing a variable called `secrets`, which is a variable that contains an [encrypted secret](https://help.github.com/en/actions/configuring-and-managing-workflows/creating-and-storing-encrypted-secrets) that you can upload to your GitHub repository.  There are thousands of Actions (that are free) for a wide variety of tasks that can be discovered on the [GitHub Marketplace](https://github.com/marketplace?type=actions).  The ability to inherit ready-made Actions in your workflow allows you to accomplish complex tasks without implementing all of the logic yourself.  Some useful Actions for those getting started are:
 
-- [actions/checkout](https://github.com/actions/checkout):  Allows you to quickly clone the contents of your repository into your environment, which you often want to do.  This does a number of other things such as automatically mount your repository’s files into downstream Docker containers.
+- [actions/checkout](https://github.com/actions/checkout):  Allows you to quickly clone the contents of your repository into your environment, which you often want to do.  This does a number of other things such as automatically mount your repository's files into downstream Docker containers.
 - [mxschmitt/action-tmate](https://github.com/mxschmitt/action-tmate): Proivdes a way to debug Actions interactively.  This uses port forwarding to give you a terminal in the browser that is connected to your Actions runner.   Be careful not to expose sensitive information if you use this.
 - [actions/github-script](https://github.com/actions/github-script):  Gives you a pre-authenticated [ocotokit.js](https://octokit.github.io/rest.js/) client that allows you to interact with the GitHub API to accomplish almost any task on GitHub automatically.  Only [these endpoints](https://help.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token#permissions-for-the-github_token) are supported (for example, the [secrets endpoint](https://developer.github.com/v3/actions/secrets/) is not in that list).
 
@@ -100,7 +100,7 @@ In addition to the aforementioned Actions, it is helpful to go peruse the offici
 
 ## Example: A fastpages Action Workflow
 
-The best to way familiarize yourself with Actions is by studying examples.  Let’s take a look at the Action workflow that automates the build of [fastpages](https://fastpages.fast.ai/fastpages/jupyter/2020/02/21/introducing-fastpages.html) (the platform used to write this blog post).
+The best to way familiarize yourself with Actions is by studying examples.  Let's take a look at the Action workflow that automates the build of [fastpages](https://fastpages.fast.ai/fastpages/jupyter/2020/02/21/introducing-fastpages.html) (the platform used to write this blog post).
 
 ### Part 1: Define Workflow Triggers
 
@@ -133,7 +133,7 @@ jobs:
     steps:
 ```
 
-The keyword `build-site` is the name of your job and you can name it whatever you want. In this case, we have a conditional if statement that dictates if this job should be run or not.  We are trying to ensure that this workflow does not run when the first commit to a repo is made with the message ‘Initial commit’.  The first variable in the if statement, [github.event](https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#github-context), contains a [json payload](https://developer.github.com/v3/activity/events/types/#webhook-payload-example-31) of the event that triggered this workflow.  When developing workflows, it is helpful to print this variable in order to inspect its structure, which you can accomplish with the following YAML:
+The keyword `build-site` is the name of your job and you can name it whatever you want. In this case, we have a conditional if statement that dictates if this job should be run or not.  We are trying to ensure that this workflow does not run when the first commit to a repo is made with the message 'Initial commit'.  The first variable in the if statement, [github.event](https://help.github.com/en/actions/reference/contexts-and-expression-syntax-for-github-actions#github-context), contains a [json payload](https://developer.github.com/v3/activity/events/types/#webhook-payload-example-31) of the event that triggered this workflow.  When developing workflows, it is helpful to print this variable in order to inspect its structure, which you can accomplish with the following YAML:
 
 ```yaml
     - name: see payload
@@ -173,7 +173,7 @@ Therefore, the `if` statement introduced above:
 if: ( github.event.commits[0].message != 'Initial commit' ) || github.run_number > 1
 ```
 
-Allows the workflow to run when the commit message is “Initial commit” as long as it is not the first commit.  ( `||` is a logical `or` operator).
+Allows the workflow to run when the commit message is "Initial commit" as long as it is not the first commit.  ( `||` is a logical `or` operator).
 
 Finally, the line `runs-on: ubuntu-latest` specifies the [host operating system](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on) that your workflows will run in.
 
@@ -226,7 +226,7 @@ The next three steps in our workflow are defined below:
 
 The step named `setup directories for Jekyll build` executes shell commands that remove the `_site` folder in order to get rid of stale files related to the page we want to build, as well as grant permissions to all the files in our repo to subsequent steps. 
 
-The step named `Jekyll build` executes a docker container hosted by the Jekyll community [on Dockerhub called `jekyll/jekyll`](https://hub.docker.com/r/jekyll/jekyll/).  For those not familiar with Docker, see [this tutorial](https://towardsdatascience.com/how-docker-can-help-you-become-a-more-effective-data-scientist-7fc048ef91d5?source=friends_link&sk=c554b55109102d47145c4b3381bee3ee).  The name of this container is called `hamelsmu/fastpages-jekyll` because I'm adding some additional dependencies to `jekyll/jekyll` and hosting those on my DockerHub account for faster build times[^2].  The [args parameter](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstepswithargs) allows you to execute arbitrary commands with the Docker container by overriding the CMD instruction in the Dockerfile.  We use this Docker container hosted on Dockerhub so we don’t have to deal with installing and configuring all of the complicated dependencies for Jekyll.  The files from our repo are already available in the Actions runtime due to the first step in this workflow, and are mounted into this Docker container automatically for us.  In this case, we are running the command `jekyll build`, which builds our website and places relevant assets them into the `_site` folder. For more information about Jekyll, [read the official docs](https://jekyllrb.com/docs/).  Finally, the `env` parameter allows me to pass an environment variable into the Docker container. 
+The step named `Jekyll build` executes a docker container hosted by the Jekyll community [on Dockerhub called `jekyll/jekyll`](https://hub.docker.com/r/jekyll/jekyll/).  For those not familiar with Docker, see [this tutorial](https://towardsdatascience.com/how-docker-can-help-you-become-a-more-effective-data-scientist-7fc048ef91d5?source=friends_link&sk=c554b55109102d47145c4b3381bee3ee).  The name of this container is called `hamelsmu/fastpages-jekyll` because I'm adding some additional dependencies to `jekyll/jekyll` and hosting those on my DockerHub account for faster build times[^2].  The [args parameter](https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idstepswithargs) allows you to execute arbitrary commands with the Docker container by overriding the CMD instruction in the Dockerfile.  We use this Docker container hosted on Dockerhub so we don't have to deal with installing and configuring all of the complicated dependencies for Jekyll.  The files from our repo are already available in the Actions runtime due to the first step in this workflow, and are mounted into this Docker container automatically for us.  In this case, we are running the command `jekyll build`, which builds our website and places relevant assets them into the `_site` folder. For more information about Jekyll, [read the official docs](https://jekyllrb.com/docs/).  Finally, the `env` parameter allows me to pass an environment variable into the Docker container. 
 
 The final command above copies a `CNAME` file into the _site folder, which we need for the custom domain [https://fastpages.fast.ai](https://fastpages.fast.ai/). Setting up custom domains are outside the scope of this article.
 
